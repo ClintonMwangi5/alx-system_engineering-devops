@@ -1,5 +1,2 @@
 #!/bin/bash
-#
-## Parse TSV log file and display the top 11 most active hosts or IPs
-#awk 'NR > 1 {count[$1]++} END {for (host in count) print count[host], host}' | sort -rn | head -n 11 | awk '{print $2}'
-#
+#tail -n +2 | cut -f -1 | sort -k 1 | uniq -c | sort -rnk 1 | head -n 11 | rev | cut -d '' -f -1

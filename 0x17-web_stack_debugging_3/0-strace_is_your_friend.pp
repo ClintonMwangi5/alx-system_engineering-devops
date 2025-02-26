@@ -1,12 +1,25 @@
-# This Puppet manifest fixes a missing permissions issue for the Apache document root
+# 0-strace_is_your_friend.pp
+# This Puppet manifest fixes the issue causing Apache to return a 500 error.
 
-exec { 'fix-apache-permissions':
-  command => '/bin/chmod -R 755 /var/www/html',
-  onlyif  => '/usr/bin/find /var/www/html -not -perm 755',
+# Ensure the parent directory exists
+file { '/var/www/html/wp-content':
+  ensure => 'directory',
+  owner  => 'www-data',
+  group  => 'www-data',
+  mode   => '0755',
 }
 
-service { 'apache2':
-  ensure => running,
-  enable => true,
-  subscribe => Exec['fix-apache-permissions'],
+# Ensure the uploads directory exists
+file { '/var/www/html/wp-content/uploads':
+  ensure => 'directory',
+  owner  => 'www-data',
+  group  => 'www-data',
+  mode   => '0755',
+}
+
+# Ensure the correct permissions for the WordPress files
+exec { 'fix-wordpress':
+  command => 'chown -R www-data:www-data /var/www/html/*',
+  path    => '/usr/bin',
+  onlyif  => 'test ! -w /var/www/html',
 }

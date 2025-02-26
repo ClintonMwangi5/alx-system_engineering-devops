@@ -97,7 +97,8 @@ Troubleshooting and basic usage information for the Datadog Agent are available 
 
     https://docs.datadoghq.com/agent/basic_agent_usage/
 [0m
-Do you want to send a failure report to Datadog (including ddagent-install.log)? (y/[n]) Timed out or input EOF reached, assuming 'No'
+Do you want to send a failure report to Datadog (including ddagent-install.log)? (y/[n]) Please answer yes or no.
+Do you want to send a failure report to Datadog (including ddagent-install.log)? (y/[n]) Enter an email address so we can follow up: OKA notification has been sent to Datadog with the contents of ddagent-install.log
 
 If you are still having problems, please send an email to support@datadoghq.com
 with the contents of ddagent-install.log and any information you think would be

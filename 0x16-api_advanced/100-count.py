@@ -1,49 +1,54 @@
 #!/usr/bin/python3
-"""
-100-count
-"""
+""" raddit api"""
+
+import json
 import requests
-from collections import defaultdict
-import re
 
-def count_words(subreddit, word_list, word_count=None, after=None):
-    """Recursively counts occurrences of keywords in hot articles of a subreddit."""
-    if word_count is None:
-       word_count = defaultdict(int)
 
-    url = f'https://www.reddit.com/r/{subreddit}/hot.json'
-    headers = {'User -Agent': 'Mozilla/5.0'}
-    params = {'after': after}
-    response = requests.get(url, headers=headers, params=params)
+def count_words(subreddit, word_list, after="", count=[]):
+    """count all words"""
 
-    # Check if the subreddit is valid
-    if response.status_code != 200:
-        return
+    if after == "":
+        count = [0] * len(word_list)
 
-    # Parse the JSON response
-    data = response.json()
-    posts = data.get('data', {}).get('children', [])
+    url = "https://www.reddit.com/r/{}/hot.json".format(subreddit)
+    request = requests.get(url,
+                           params={'after': after},
+                           allow_redirects=False,
+                           headers={'user-agent': 'bhalut'})
 
-    # If no posts are found, return
-    if not posts:
-        return
+    if request.status_code == 200:
+        data = request.json()
 
-    # Process each post
-    for post in posts:
-        title = post['data']['title'].lower()
-        for word in word_list:
-            # Use regex to find whole words only
-            count = len(re.findall(r'\b' + re.escape(word.lower()) + r'\b', title))
-            word_count[word.lower()] += count
+        for topic in (data['data']['children']):
+            for word in topic['data']['title'].split():
+                for i in range(len(word_list)):
+                    if word_list[i].lower() == word.lower():
+                        count[i] += 1
 
-    # Check for pagination and recurse if there are more posts
-    after = data.get('data', {}).get('after')
-    if after:
-        return count_words(subreddit, word_list, word_count, after)
+        after = data['data']['after']
+        if after is None:
+            save = []
+            for i in range(len(word_list)):
+                for j in range(i + 1, len(word_list)):
+                    if word_list[i].lower() == word_list[j].lower():
+                        save.append(j)
+                        count[i] += count[j]
 
-    # Print the results in the required format
-    sorted_counts = sorted(word_count.items(), key=lambda x: (-x[1], x[0]))
-    for word, count in sorted_counts:
-        if count > 0:
-            print(f"{word}: {count}")
+            for i in range(len(word_list)):
+                for j in range(i, len(word_list)):
+                    if (count[j] > count[i] or
+                            (word_list[i] > word_list[j] and
+                             count[j] == count[i])):
+                        aux = count[i]
+                        count[i] = count[j]
+                        count[j] = aux
+                        aux = word_list[i]
+                        word_list[i] = word_list[j]
+                        word_list[j] = aux
 
+            for i in range(len(word_list)):
+                if (count[i] > 0) and i not in save:
+                    print("{}: {}".format(word_list[i].lower(), count[i]))
+        else:
+            count_words(subreddit, word_list, after, count)

@@ -1,35 +1,30 @@
 #!/usr/bin/python3
-"""
-2-recurse
-"""
+"""Function to query a list of all hot posts on a given Reddit subreddit."""
 import requests
 
-def recurse(subreddit, hot_list=[]):
-    """Recursively retrieves the titles of all hot articles for a given subreddit."""
-   url = f'https://www.reddit.com/r/{subreddit}/hot.json'
-   headers = {'User -Agent': 'Mozilla/5.0'}
-   params = {'after': hot_list[-1] if hot_list else None}
-                        response = requests.get(url, headers=headers, params=params)
 
-   # Check if the subreddit is valid
-   if response.status_code != 200:
-       return None
+def recurse(subreddit, hot_list=[], after="", count=0):
+    """Returns a list of titles of all hot posts on a given subreddit."""
+    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
+    headers = {
+        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
+    }
+    params = {
+        "after": after,
+        "count": count,
+        "limit": 100
+    }
+    response = requests.get(url, headers=headers, params=params,
+                            allow_redirects=False)
+    if response.status_code == 404:
+        return None
 
-   # Parse the JSON response
-   data = response.json()
-   posts = data.get('data', {}).get('children', [])
+    results = response.json().get("data")
+    after = results.get("after")
+    count += results.get("dist")
+    for c in results.get("children"):
+        hot_list.append(c.get("data").get("title"))
 
-   # If no posts are found, return the current hot_list
-   if not posts:
-       return hot_list
-
-   # Add the titles of the current posts to hot_list
-   for post in posts:
-       hot_list.append(post['data']['title'])
-
-   # Check for pagination and recurse if there are more posts
-   after = data.get('data', {}).get('after')
-   if after:
-      return recurse(subreddit, hot_list)
-
-return hot_list
+    if after is not None:
+        return recurse(subreddit, hot_list, after, count)
+    return hot_list
